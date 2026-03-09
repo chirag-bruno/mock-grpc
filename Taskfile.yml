@@ -1,0 +1,79 @@
+version: '3'
+
+vars:
+  BINARY_NAME: todo-server
+  PROTO_DIR: proto
+  PKG_DIR: pkg/todo
+  EXT: '{{if eq OS "windows"}}.exe{{end}}'
+  BINARY: bin/{{.BINARY_NAME}}{{.EXT}}
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  build:
+    desc: Build the server binary
+    cmds:
+      - mkdir -p bin
+      - go build -o {{.BINARY}} ./cmd/server
+
+  run:
+    desc: Run the server (default http mode)
+    deps: [build]
+    cmds:
+      - ./{{.BINARY}}
+
+  run:unix:
+    desc: Run the server in unix socket mode (Linux/macOS only)
+    platforms: [linux, darwin]
+    deps: [build]
+    cmds:
+      - ./{{.BINARY}} --mode unix --address /tmp/todo.sock
+
+  run:pipe:
+    desc: Run the server in pipe mode (Windows only)
+    platforms: [windows]
+    deps: [build]
+    cmds:
+      - ./{{.BINARY}} --mode pipe --address '\\.\pipe\todo'
+
+  proto:
+    desc: Generate Go code from protobuf
+    cmds:
+      - protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative {{.PROTO_DIR}}/todo.proto
+      - mv {{.PROTO_DIR}}/*.go {{.PKG_DIR}}/
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - cmd: rm -rf bin/
+        platforms: [linux, darwin]
+      - cmd: rd /s /q bin
+        platforms: [windows]
+        ignore_error: true
+      - cmd: rm -f /tmp/todo.sock
+        platforms: [linux, darwin]
+
+  tidy:
+    desc: Tidy go modules
+    cmds:
+      - go mod tidy
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test -v ./...
+
+  lint:
+    desc: Run linter
+    cmds:
+      - golangci-lint run
+
+  all:
+    desc: Clean, tidy, and build
+    cmds:
+      - task: clean
+      - task: tidy
+      - task: build
