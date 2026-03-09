@@ -137,14 +137,20 @@ See [`proto/todo.proto`](proto/todo.proto) for the full schema.
 
 ```
 mock-grpc/
-├── cmd/server/          # CLI entrypoint
-│   ├── main.go
-│   ├── pipe_windows.go  # Windows named pipe support
-│   └── pipe_other.go    # Unix stub
-├── internal/server/     # gRPC server implementation
-├── pkg/todo/            # Generated protobuf code
-├── proto/               # Protobuf definitions
-├── Taskfile.yml         # Task runner configuration
+├── cmd/server/
+│   └── main.go              # CLI entrypoint
+├── internal/
+│   ├── server/
+│   │   ├── server.go        # TodoServer implementation
+│   │   └── grpc.go          # Server runner and logging interceptor
+│   └── transport/
+│       ├── listener.go      # Listener factory and path validation
+│       ├── pipe_windows.go  # Windows named pipe support
+│       └── pipe_other.go    # Unix stub
+├── pkg/todo/                # Generated protobuf code
+├── proto/
+│   └── todo.proto           # Protobuf definitions
+├── Taskfile.yml             # Task runner configuration
 └── go.mod
 ```
 
