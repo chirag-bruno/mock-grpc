@@ -8,6 +8,7 @@ import (
 	"github.com/chirag-bruno/mock-grpc/internal/transport"
 	"github.com/chirag-bruno/mock-grpc/pkg/todo"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type Config struct {
@@ -31,6 +32,7 @@ func serve(listener net.Listener) error {
 		grpc.UnaryInterceptor(loggingInterceptor),
 	)
 	todo.RegisterTodoServiceServer(grpcServer, NewTodoServer())
+	reflection.Register(grpcServer)
 
 	log.Printf("Server is ready to accept connections")
 	return grpcServer.Serve(listener)
